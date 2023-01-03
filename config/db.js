@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 mongoose.set('strictQuery', false);
 const config = require('config');
 const db = config.get('mongoURI');
