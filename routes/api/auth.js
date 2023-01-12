@@ -28,7 +28,6 @@ router.get('/', auth, async (req, res) => {
 router.post(
 	'/',
 	[
-		check('name', 'Name is required').not().isEmpty(),
 		check('email', 'Please include a valid Email').isEmail(),
 		check('password', 'A password is required').exists(),
 	],
@@ -48,6 +47,15 @@ router.post(
 					errors: [{ msg: 'Invalid Credentials' }],
 				});
 			}
+			// Think about combine both of these in the above statement with an ||
+
+			const isMatch = await bcrypt.compare(password, user.password);
+
+			if (!isMatch) {
+				return res.status(400).json({
+					errors: [{ msg: 'Invalid Credentials' }],
+				});
+			}
 
 			// return jsonwebtoken
 			const payload = {
@@ -57,7 +65,7 @@ router.post(
 			};
 			jwt.sign(
 				payload,
-				config.get('jwtToken'),
+				config.get('jwtSecret'),
 				{ expiresIn: 3600 },
 				(err, token) => {
 					if (err) throw err;
