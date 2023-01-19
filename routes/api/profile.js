@@ -82,13 +82,13 @@ router.post(
 		if (facebook) profileFields.social.facebook = facebook;
 		if (twitter) profileFields.social.twitter = twitter;
 		if (instagram) profileFields.social.instagram = instagram;
-		if (linkedin) profileFields.social.twitterlinkedin = linkedin;
+		if (linkedin) profileFields.social.linkedin = linkedin;
 
 		try {
 			let profile = await Profile.findOne({ user: req.user.id });
 			if (profile) {
 				//update
-				profile = await profile.findOneAndUpdate(
+				profile = await Profile.findOneAndUpdate(
 					{ user: req.user.id },
 					{ $set: profileFields },
 					{ new: true }
@@ -97,7 +97,7 @@ router.post(
 			}
 			// Create
 			profile = new Profile(profileFields);
-			await Profile.ave();
+			await profile.save();
 			res.json(profile);
 		} catch (err) {
 			console.error(err.message);
@@ -105,5 +105,44 @@ router.post(
 		}
 	}
 );
+
+//@route GET api/profile
+//@desc Get all profiles
+//@access Public
+
+router.get('/', async (req, res) => {
+	try {
+		const profiles = await Profile.find().populate('user', [
+			'name',
+			'avatar',
+		]);
+		res.json(profiles);
+	} catch (err) {
+		console.error(err.message);
+		res.status(500).send('Server Error in GET for profiles');
+	}
+});
+
+//@route GET api/profile/:user_id
+//@desc Get profile by user ID
+//@access Public
+
+router.get('/user/:user_id', async (req, res) => {
+	try {
+		const profile = await Profile.findOne({
+			user: req.params.user_id,
+		}).populate('user', ['name', 'avatar']);
+
+		if (!profile)
+			return res
+				.status(400)
+				.json({ msg: 'There is no profile for this user' });
+
+		res.json(profile);
+	} catch (err) {
+		console.error(err.message);
+		res.status(500).send('Server Error in GET for profiles');
+	}
+});
 
 module.exports = router;
